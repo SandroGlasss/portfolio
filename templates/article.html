@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="single-article">
+    {% if article.image_filename %}
+    <div class="article-hero">
+        <img src="{{ url_for('static', filename='article_images/' + article.image_filename) }}" alt="{{ article.title }}">
+    </div>
+    {% endif %}
+    
+    <div class="article-container">
+        <div class="article-header">
+            <div class="article-source">{{ article.publication }}</div>
+            <h1 class="article-title">{{ article.title }}</h1>
+            <div class="article-meta">
+                <span class="date">{{ article.date_published.strftime('%B %d, %Y') }}</span>
+                {% if article.category %}
+                <span class="category">{{ article.category }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="article-body">
+            {% for paragraph in article.content.split('[PARA]') %}
+                <p>{{ paragraph|safe }}</p>
+            {% endfor %}
+        </div>
+
+        {% if current_user.is_authenticated and article.user_id == current_user.id %}
+        <div class="article-actions">
+            <a href="{{ url_for('edit_article', id=article.id) }}" class="btn btn-edit">Edit Article</a>
+            <a href="{{ url_for('home') }}" class="btn btn-back">Back to Articles</a>
+        </div>
+        {% else %}
+        <div class="article-actions">
+            <a href="{{ url_for('home') }}" class="btn btn-back">Back to Articles</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
