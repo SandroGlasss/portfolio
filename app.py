@@ -17,7 +17,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/article_images'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-# Define valid categories
+# Define valid categories, we can add more later
 VALID_CATEGORIES = ['News', 'Politics', 'Human Rights', 'Russia']
 
 # Make sure upload folder exists
