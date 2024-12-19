@@ -1,137 +1,123 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Portfolio</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
-</head>
-<body>
-    <nav>
-        <div class="nav-container">
-            <a href="{{ url_for('home') }}" class="logo">My Portfolio</a>
-            <div class="nav-links">
-                {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('new_article') }}">New Article</a>
-                    <a href="{{ url_for('logout') }}">Logout</a>
-                {% else %}
-                    <a href="{{ url_for('login') }}">Login</a>
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Filter section -->
+<form method="get" action="{{ url_for('home') }}" class="filters" id="filterForm">
+    <div class="filter-group">
+        <label for="publication">Publication</label>
+        <select name="publication" id="publication">
+            <option value="">All Publications</option>
+            {% for pub in publications %}
+            <option value="{{ pub }}" {% if current_publication == pub %}selected{% endif %}>
+                {{ pub }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="year">Year</label>
+        <select name="year" id="year">
+            <option value="">All Years</option>
+            {% for year in years %}
+            <option value="{{ year }}" {% if current_year|string == year|string %}selected{% endif %}>
+                {{ year }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label for="category">Category</label>
+        <select name="category" id="category">
+            <option value="">All Categories</option>
+            {% for category in categories %}
+            <option value="{{ category }}" {% if current_category == category %}selected{% endif %}>
+                {{ category }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+</form>
+
+<div class="view-toggle">
+    <button type="button" class="view-btn active" data-view="grid">
+        Grid View
+    </button>
+    <button type="button" class="view-btn" data-view="list">
+        List View
+    </button>
+</div>
+
+<div class="articles grid-view">
+    {% for article in articles %}
+        <div class="article-card">
+            {% if article.image_filename %}
+                <div class="article-image">
+                    <img src="{{ url_for('static', filename='article_images/' + article.image_filename) }}" alt="{{ article.title }}">
+                </div>
+            {% endif %}
+            <div class="article-content-wrapper">
+                <h2 class="article-title">{{ article.title }}</h2>
+                <div class="article-meta">
+                    {{ article.publication }} | {{ article.date_published.strftime('%B %d, %Y') }}
+                    {% if article.category %}
+                        | {{ article.category }}
+                    {% endif %}
+                </div>
+                <p class="article-content">
+                    {{ article.content[:200] + '...' if article.content|length > 200 else article.content }}
+                </p>
+                <a href="{{ url_for('article', id=article.id) }}" class="btn btn-primary">Read More</a>
+                {% if current_user.is_authenticated and article.author == current_user %}
+                    <a href="{{ url_for('edit_article', id=article.id) }}" class="btn btn-edit">Edit</a>
                 {% endif %}
             </div>
         </div>
-    </nav>
+    {% else %}
+        <p>No articles found.</p>
+    {% endfor %}
+</div>
 
-    <main>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="flash-message">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // View toggle functionality
+        const viewBtns = document.querySelectorAll('.view-btn');
+        const articlesContainer = document.querySelector('.articles');
 
-        <form method="get" action="{{ url_for('home') }}" class="filters">
-            <div class="filter-group">
-                <label for="publication">Publication</label>
-                <select name="publication" id="publication" onchange="this.form.submit()">
-                    <option value="">All Publications</option>
-                    {% for pub in publications %}
-                    <option value="{{ pub }}" {% if current_publication == pub %}selected{% endif %}>
-                        {{ pub }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label for="year">Year</label>
-                <select name="year" id="year" onchange="this.form.submit()">
-                    <option value="">All Years</option>
-                    {% for year in years %}
-                    <option value="{{ year }}" {% if current_year|string == year|string %}selected{% endif %}>
-                        {{ year }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="filter-group">
-                <label for="category">Category</label>
-                <select name="category" id="category" onchange="this.form.submit()">
-                    <option value="">All Categories</option>
-                    {% for category in categories %}
-                    <option value="{{ category }}" {% if current_category == category %}selected{% endif %}>
-                        {{ category }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-        </form>
-
-        <div class="view-toggle">
-            <button type="button" class="view-btn active" data-view="grid">
-                Grid View
-            </button>
-            <button type="button" class="view-btn" data-view="list">
-                List View
-            </button>
-        </div>
-
-        <div class="articles grid-view">
-            {% for article in articles %}
-                <div class="article-card">
-                    {% if article.image_filename %}
-                        <div class="article-image">
-                            <img src="{{ url_for('static', filename='article_images/' + article.image_filename) }}" alt="{{ article.title }}">
-                        </div>
-                    {% endif %}
-                    <div class="article-content-wrapper">
-                        <h2 class="article-title">{{ article.title }}</h2>
-                        <div class="article-meta">
-                            {{ article.publication }} | {{ article.date_published.strftime('%B %d, %Y') }}
-                            {% if article.category %}
-                                | {{ article.category }}
-                            {% endif %}
-                        </div>
-                        <p class="article-content">
-                            {{ article.content[:200] + '...' if article.content|length > 200 else article.content }}
-                        </p>
-                        <a href="{{ url_for('article', id=article.id) }}" class="btn btn-primary">Read More</a>
-                        {% if current_user.is_authenticated and article.author == current_user %}
-                            <a href="{{ url_for('edit_article', id=article.id) }}" class="btn btn-edit">Edit</a>
-                        {% endif %}
-                    </div>
-                </div>
-            {% else %}
-                <p>No articles found.</p>
-            {% endfor %}
-        </div>
-    </main>
-
-    <footer>
-        <p>&copy; 2024 My Portfolio. All rights reserved.</p>
-    </footer>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const viewBtns = document.querySelectorAll('.view-btn');
-            const articlesContainer = document.querySelector('.articles');
-
-            viewBtns.forEach(btn => {
-                btn.addEventListener('click', () => {
-                    viewBtns.forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    
-                    if (btn.dataset.view === 'list') {
-                        articlesContainer.classList.remove('grid-view');
-                        articlesContainer.classList.add('list-view');
-                    } else {
-                        articlesContainer.classList.remove('list-view');
-                        articlesContainer.classList.add('grid-view');
-                    }
-                });
+        viewBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                viewBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                if (btn.dataset.view === 'list') {
+                    articlesContainer.classList.remove('grid-view');
+                    articlesContainer.classList.add('list-view');
+                } else {
+                    articlesContainer.classList.remove('list-view');
+                    articlesContainer.classList.add('grid-view');
+                }
             });
         });
-    </script>
-</body>
-</html>
+
+        // Filter handling
+        const filterForm = document.getElementById('filterForm');
+        const filterSelects = filterForm.querySelectorAll('select');
+
+        filterSelects.forEach(select => {
+            select.addEventListener('change', function() {
+                const formData = new FormData(filterForm);
+                const params = new URLSearchParams();
+
+                for (let [key, value] of formData.entries()) {
+                    if (value) {
+                        params.append(key, value);
+                    }
+                }
+
+                window.location.href = `${window.location.pathname}?${params.toString()}`;
+            });
+        });
+    });
+</script>
+{% endblock %}

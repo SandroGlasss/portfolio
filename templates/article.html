@@ -2,40 +2,72 @@
 
 {% block content %}
 <div class="single-article">
-    {% if article.image_filename %}
-    <div class="article-hero">
-        <img src="{{ url_for('static', filename='article_images/' + article.image_filename) }}" alt="{{ article.title }}">
-    </div>
-    {% endif %}
-    
-    <div class="article-container">
-        <div class="article-header">
-            <div class="article-source">{{ article.publication }}</div>
-            <h1 class="article-title">{{ article.title }}</h1>
-            <div class="article-meta">
-                <span class="date">{{ article.date_published.strftime('%B %d, %Y') }}</span>
-                {% if article.category %}
-                <span class="category">{{ article.category }}</span>
-                {% endif %}
-            </div>
-        </div>
+   {% if article.image_filename %}
+   <div class="article-hero">
+       <img src="{{ url_for('static', filename='article_images/' + article.image_filename) }}" alt="{{ article.title }}">
+   </div>
+   {% endif %}
+   
+   <div class="article-container">
+       <div class="article-header">
+           <div class="article-source">{{ article.publication }}</div>
+           <h1 class="article-title">{{ article.title }}</h1>
+           <div class="article-meta">
+               <span class="date">{{ article.date_published.strftime('%B %d, %Y') }}</span>
+               {% if article.category %}
+               <span class="category">{{ article.category }}</span>
+               {% endif %}
+           </div>
+       </div>
 
-        <div class="article-body">
-            {% for paragraph in article.content.split('[PARA]') %}
-                <p>{{ paragraph|safe }}</p>
-            {% endfor %}
-        </div>
+       <div class="article-body">
+           {% for paragraph in article.content.split('[PARA]') %}
+               <p>{{ paragraph }}</p>
+           {% endfor %}
+       </div>
 
-        {% if current_user.is_authenticated and article.user_id == current_user.id %}
-        <div class="article-actions">
-            <a href="{{ url_for('edit_article', id=article.id) }}" class="btn btn-edit">Edit Article</a>
-            <a href="{{ url_for('home') }}" class="btn btn-back">Back to Articles</a>
-        </div>
-        {% else %}
-        <div class="article-actions">
-            <a href="{{ url_for('home') }}" class="btn btn-back">Back to Articles</a>
-        </div>
-        {% endif %}
-    </div>
+       <!-- Comments Section -->
+       <div class="comments-section">
+           <h3>Comments</h3>
+           
+           {% if current_user.is_authenticated %}
+           <form method="POST" action="{{ url_for('add_comment', id=article.id) }}" class="comment-form">
+               <div class="form-group">
+                   <textarea name="content" required placeholder="Add a comment..."></textarea>
+               </div>
+               <button type="submit" class="btn btn-primary">Post Comment</button>
+           </form>
+           {% else %}
+           <p>Please <a href="{{ url_for('login') }}">login</a> to comment.</p>
+           {% endif %}
+           
+           <div class="comments-list">
+               {% for comment in article.comments|sort(attribute='created_at', reverse=true) %}
+               <div class="comment">
+                   <div class="comment-meta">
+                       <strong>{{ comment.user.username }}</strong>
+                       <span>{{ comment.created_at.strftime('%B %d, %Y %H:%M') }}</span>
+                   </div>
+                   <div class="comment-content">
+                       {{ comment.content }}
+                   </div>
+               </div>
+               {% else %}
+               <p class="no-comments">No comments yet. Be the first to comment!</p>
+               {% endfor %}
+           </div>
+       </div>
+
+       {% if current_user.is_authenticated and article.user_id == current_user.id %}
+       <div class="article-actions">
+           <a href="{{ url_for('edit_article', id=article.id) }}" class="btn btn-edit">Edit Article</a>
+           <a href="{{ url_for('home') }}" class="btn btn-back">Back to Articles</a>
+       </div>
+       {% else %}
+       <div class="article-actions">
+           <a href="{{ url_for('home') }}" class="btn btn-back">Back to Articles</a>
+       </div>
+       {% endif %}
+   </div>
 </div>
 {% endblock %}
