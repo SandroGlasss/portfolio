@@ -1,8 +1,1 @@
-"migrations/" 
-
-"__pycache__/"
-
-"restore_db.py"
-"backup_db.py"
-"backup_20241220_100300.json"
-
+"backup_db.py" 
