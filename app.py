@@ -122,6 +122,8 @@ def home():
                          current_year=year,
                          current_category=category)
 
+
+#routes for login, logout, new_article, article, add_comment, edit_article, register, about, contact
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -294,4 +296,4 @@ def contact():
     return render_template('contact.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8080)
