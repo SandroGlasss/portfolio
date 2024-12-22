@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="login-form">  <!-- Using login-form class since it's already styled -->
+    <h2>Register New User</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <div class="password-requirements">
+                Password must:
+                <ul>
+                    <li>Be at least 8 characters long</li>
+                    <li>Contain at least one uppercase letter</li>
+                    <li>Contain at least one lowercase letter</li>
+                    <li>Contain at least one number</li>
+                    <li>Contain at least one special character</li>
+                </ul>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="password_confirm">Confirm Password:</label>
+            <input type="password" id="password_confirm" name="password_confirm" required>
+        </div>
+        <button type="submit" class="submit-button">Register</button>
+        <p class="form-link">Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+    </form>
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+{% endblock %}

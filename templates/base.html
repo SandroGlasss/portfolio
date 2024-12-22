@@ -5,16 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Portfolio{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='test.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
 
 </head>
 <body>
     <nav>
         <div class="nav-container">
-            <a href="{{ url_for('home') }}" class="logo">Your Name</a>
+            <a href="{{ url_for('home') }}" class="logo">Sandro Gvindadze</a>
             <div class="nav-links">
+                <a href="{{ url_for('home') }}">Home</a>
+                <a href="{{ url_for('about') }}">About</a>
+                <a href="{{ url_for('contact') }}">Contact</a>
                 {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('new_article') }}">New Article</a>
+                    {% if current_user.role == 'admin' %}
+                        <a href="{{ url_for('new_article') }}">New Article</a>
+                    {% endif %}
                     <a href="{{ url_for('logout') }}">Logout</a>
                 {% else %}
                     <a href="{{ url_for('login') }}">Login</a>
@@ -35,7 +42,7 @@
     </main>
 
     <footer>
-        <p>&copy; 2024 Your Portfolio. All rights reserved.</p>
+        <p>&copy; 2024 Sandro Gvindadze's Portfolio. All rights reserved.</p>
     </footer>
 </body>
 </html>

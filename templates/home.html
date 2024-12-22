@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
+
+<!-- Welcome Section -->
+<div class="welcome-section">
+    <h1>Welcome to my Portfolio</h1>
+    <p class="welcome-text">Here's some of the stuff I've written</p>
+</div>
 <!-- Filter section -->
 <form method="get" action="{{ url_for('home') }}" class="filters" id="filterForm">
     <div class="filter-group">
@@ -66,10 +72,11 @@
                     {% endif %}
                 </div>
                 <p class="article-content">
-                    {{ article.content[:200] + '...' if article.content|length > 200 else article.content }}
+                    {% set first_paragraph = article.content.split('[PARA]')[0] %}
+                    {{ (first_paragraph[:200] + '...') if first_paragraph|length > 200 else first_paragraph }}
                 </p>
                 <a href="{{ url_for('article', id=article.id) }}" class="btn btn-primary">Read More</a>
-                {% if current_user.is_authenticated and article.author == current_user %}
+                {% if current_user.is_authenticated and current_user.role == 'admin' %}
                     <a href="{{ url_for('edit_article', id=article.id) }}" class="btn btn-edit">Edit</a>
                 {% endif %}
             </div>
@@ -121,3 +128,24 @@
     });
 </script>
 {% endblock %}
+
+.welcome-section {
+    background: white;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.welcome-section h1 {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.welcome-text {
+    font-size: 1.2rem;
+    color: #666;
+    line-height: 1.6;
+}

@@ -6,19 +6,21 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from sqlalchemy import extract
 from flask_migrate import Migrate
+import re  
 import os
 
+# Initialize Flask app and configs
 app = Flask(__name__)
-print("Static folder path:", app.static_folder)
 app.config['SECRET_KEY'] = 'your-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///portfolio.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Configure upload folder
 app.config['UPLOAD_FOLDER'] = 'static/article_images'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-# Make sure upload folder exists
+# Constants
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+PUBLICATIONS = ['BBC', 'Radio Liberty', 'taz']
+
+# Create upload folder
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Initialize extensions
@@ -28,10 +30,12 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# Models
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(120), nullable=False)
+    role = db.Column(db.String(20), default='user')
     articles = db.relationship('Article', backref='author', lazy=True)
     comments = db.relationship('Comment', backref='user', lazy=True)
 
@@ -56,44 +60,67 @@ class Comment(db.Model):
     article_id = db.Column(db.Integer, db.ForeignKey('article.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
+# Helper functions
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def is_admin():
+    return current_user.is_authenticated and current_user.role == 'admin'
+
+def get_unique_categories():
+    categories = db.session.query(Article.category).distinct().all()
+    return [cat[0] for cat in categories if cat[0]]
+
+def password_meets_requirements(password):
+    if len(password) < 12:
+        return False, "Password must be at least 12 characters long"
+    if not re.search(r"[A-Z]", password):
+        return False, "Password must contain at least one uppercase letter"
+    if not re.search(r"[a-z]", password):
+        return False, "Password must contain at least one lowercase letter"
+    if not re.search(r"\d", password):
+        return False, "Password must contain at least one number"
+    if not re.search(r"[ !@#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password):
+        return False, "Password must contain at least one special character"
+    return True, "Password meets requirements"
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Routes
 @app.route('/')
 def home():
     publication = request.args.get('publication')
     year = request.args.get('year')
+    category = request.args.get('category')
     
-    # Start with base query
+    # Get filter options
+    categories = get_unique_categories()
+    
+    # Build query
     query = Article.query
-    
-    # Apply filters
     if publication:
         query = query.filter_by(publication=publication)
     if year:
         query = query.filter(extract('year', Article.date_published) == int(year))
+    if category:
+        query = query.filter_by(category=category)
     
-    # Get articles with applied filters
+    # Get articles and years
     articles = query.order_by(Article.date_published.desc()).all()
-    
-    # Get all unique years from articles for the filter dropdown
-    years_query = db.session.query(
+    years = [int(year[0]) for year in db.session.query(
         extract('year', Article.date_published).label('year')
-    ).distinct().order_by('year').all()
-    years = [int(year[0]) for year in years_query if year[0]]
-    
-    publications = ['BBC', 'Radio Liberty', 'taz']
+    ).distinct().order_by('year').all() if year[0]]
     
     return render_template('home.html', 
                          articles=articles,
-                         publications=publications,
+                         publications=PUBLICATIONS,
+                         categories=categories,
                          years=years,
                          current_publication=publication,
-                         current_year=year)
+                         current_year=year,
+                         current_category=category)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -115,6 +142,10 @@ def logout():
 @app.route('/new_article', methods=['GET', 'POST'])
 @login_required
 def new_article():
+    if not is_admin():
+        flash('Only administrators can create articles')
+        return redirect(url_for('home'))
+    
     if request.method == 'POST':
         # Handle image upload
         image = request.files['image']
@@ -123,13 +154,15 @@ def new_article():
             filename = secure_filename(image.filename)
             image_filename = f"{datetime.now().timestamp()}_{filename}"
             image.save(os.path.join(app.config['UPLOAD_FOLDER'], image_filename))
-
+        
         try:
             date_published = datetime.strptime(request.form['date_published'], '%Y-%m-%d')
         except ValueError:
             flash('Invalid date format. Please use YYYY-MM-DD')
-            return render_template('new_article.html')
-
+            return render_template('new_article.html', 
+                                publications=PUBLICATIONS,
+                                categories=get_unique_categories())
+        
         article = Article(
             title=request.form['title'],
             content=request.form['content'],
@@ -143,7 +176,10 @@ def new_article():
         db.session.commit()
         flash('Article created successfully!')
         return redirect(url_for('home'))
-    return render_template('new_article.html')
+    
+    return render_template('new_article.html', 
+                         publications=PUBLICATIONS,
+                         categories=get_unique_categories())
 
 @app.route('/article/<int:id>')
 def article(id):
@@ -169,6 +205,10 @@ def add_comment(id):
 @app.route('/edit_article/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_article(id):
+    if not is_admin():
+        flash('Only administrators can edit articles')
+        return redirect(url_for('home'))
+    
     article = Article.query.get_or_404(id)
     if article.user_id != current_user.id:
         flash('You can only edit your own articles.')
@@ -179,7 +219,6 @@ def edit_article(id):
         if 'image' in request.files:
             image = request.files['image']
             if image and allowed_file(image.filename):
-                # Delete old image if it exists
                 if article.image_filename:
                     old_image_path = os.path.join(app.config['UPLOAD_FOLDER'], article.image_filename)
                     if os.path.exists(old_image_path):
@@ -194,7 +233,10 @@ def edit_article(id):
             date_published = datetime.strptime(request.form['date_published'], '%Y-%m-%d')
         except ValueError:
             flash('Invalid date format. Please use YYYY-MM-DD')
-            return render_template('edit_article.html', article=article)
+            return render_template('edit_article.html', 
+                                article=article,
+                                publications=PUBLICATIONS,
+                                categories=get_unique_categories())
 
         article.title = request.form['title']
         article.content = request.form['content']
@@ -204,7 +246,52 @@ def edit_article(id):
         db.session.commit()
         flash('Article updated successfully!')
         return redirect(url_for('article', id=article.id))
-    return render_template('edit_article.html', article=article)
+    
+    return render_template('edit_article.html', 
+                         article=article,
+                         publications=PUBLICATIONS,
+                         categories=get_unique_categories())
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        password_confirm = request.form['password_confirm']
+        
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists')
+            return redirect(url_for('register'))
+        
+        if password != password_confirm:
+            flash('Passwords do not match')
+            return redirect(url_for('register'))
+        
+        is_valid, message = password_meets_requirements(password)
+        if not is_valid:
+            flash(message)
+            return redirect(url_for('register'))
+        
+        new_user = User(
+            username=username,
+            password=generate_password_hash(password),
+            role='user'
+        )
+        db.session.add(new_user)
+        db.session.commit()
+        
+        flash('Registration successful! Please login.')
+        return redirect(url_for('login'))
+    
+    return render_template('register.html')
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/contact')
+def contact():
+    return render_template('contact.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

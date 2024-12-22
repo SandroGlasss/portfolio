@@ -1,31 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Article - My Portfolio</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <nav>
-        <div class="nav-container">
-            <a href="{{ url_for('home') }}" class="logo">My Portfolio</a>
-            <div class="nav-links">
-                <a href="{{ url_for('home') }}">Home</a>
-                <a href="{{ url_for('logout') }}">Logout</a>
-            </div>
-        </div>
-    </nav>
+{% extends "base.html" %}
 
-    <main>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="flash-message">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
+{% block content %} 
         <form class="article-form" method="POST" enctype="multipart/form-data">
             <h1>Create New Article</h1>
             
@@ -79,3 +54,5 @@
     </footer>
 </body>
 </html>
+
+{% endblock %}

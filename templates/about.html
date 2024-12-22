@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="about-container">
+    <div class="about-header">
+        <div class="profile-image">
+            <img src="{{ url_for('static', filename='images/Sandro.jpg') }}" alt="Sandro Gvindadze">
+
+        </div>
+        <h1>Sandra Gvindadze</h1>
+        <div class="subtitle">Journalist | Content Creator</div>
+    </div>
+    
+    <div class="bio-section">
+        <h2>About Me</h2>
+        <p>I am a journalist with experience in reporting from Georgia, Germany and the UK. My work primarily focuses on Russian propaganda, human rights issues, and politics in post-Soviet countries.</p>
+        
+        <p>Currently based in Cardiff, Wales, I am pursuing a Master's degree in Computational and Data Journalism at Cardiff University. This program combines my passion for storytelling with cutting-edge digital skills.</p>
+        
+        <h2>Experience</h2>
+        <p>My articles have been published in several major outlets including:</p>
+        <ul>
+            <li>BBC</li>
+            <li>Radio Free Europe/Radio Liberty</li>
+            <li>taz - die tageszeitung (German daily newspaper)</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}s
