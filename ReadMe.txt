@@ -1,0 +1,1 @@
+Openshift link: https://my-portfolio-sandro-project.apps.containers.cs.cf.ac.uk/
