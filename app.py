@@ -12,12 +12,10 @@ import os
 # Initialize Flask app and configs
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/portfolio.db'
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(basedir, 'instance', 'portfolio.db')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/article_images'
-
-print(f"Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
-print(f"Database path exists: {os.path.exists('instance/portfolio.db')}")
 
 # Constants
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -299,5 +297,4 @@ def contact():
     return render_template('contact.html')
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(debug=True)
