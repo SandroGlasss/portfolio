@@ -12,7 +12,7 @@ import os
 # Initialize Flask app and configs
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
-app.app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/portfolio.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/portfolio.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/article_images'
 
