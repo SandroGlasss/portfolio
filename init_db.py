@@ -1,4 +1,8 @@
 from app import app, db
+import os
+
+# Ensure instance directory exists
+os.makedirs('instance', exist_ok=True)
 
 try:
     with app.app_context():
