@@ -16,6 +16,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/portfolio.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/article_images'
 
+print(f"Database URI: {app.config['SQLALCHEMY_DATABASE_URI']}")
+print(f"Database path exists: {os.path.exists('instance/portfolio.db')}")
+
 # Constants
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 PUBLICATIONS = ['BBC', 'Radio Liberty', 'taz']
