@@ -8,6 +8,10 @@ from sqlalchemy import extract
 from flask_migrate import Migrate
 import re  
 import os
+import logging
+from logging.handlers import RotatingFileHandler
+
+
 
 # Initialize Flask app and configs
 app = Flask(__name__)
@@ -296,5 +300,36 @@ def about():
 def contact():
     return render_template('contact.html')
 
+
+@app.route('/healthz')
+def health_check():
+    return '', 200
+
+@app.route('/ready')
+def ready_check():
+    try:
+        db.session.execute('SELECT 1')
+        return '', 200
+    except Exception:
+        return 'Database not ready', 500
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return "Internal Server Error", 500
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return "Page Not Found", 404
+
+if not app.debug:
+    file_handler = RotatingFileHandler('app.log', maxBytes=10240, backupCount=10)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+    ))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+    app.logger.setLevel(logging.INFO)
+    app.logger.info('Application startup')
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080)
